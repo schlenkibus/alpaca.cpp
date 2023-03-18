@@ -939,10 +939,11 @@ int main(int argc, char ** argv) {
 
             // decrement remaining sampling budget
             --remaining_tokens;
+            fprintf(stderr, "remaining tokens: %i\n", remaining_tokens);
         } else {
             // some user input remains from prompt or interaction, forward it to processing
             while (embd_inp.size() > input_consumed) {
-                // fprintf(stderr, "%6d -> '%s'\n", embd_inp[input_consumed], vocab.id_to_token.at(embd_inp[input_consumed]).c_str());
+                fprintf(stderr, "%6d -> '%s'\n", embd_inp[input_consumed], vocab.id_to_token.at(embd_inp[input_consumed]).c_str());
 
                 embd.push_back(embd_inp[input_consumed]);
                 last_n_tokens.erase(last_n_tokens.begin());
@@ -969,7 +970,7 @@ int main(int argc, char ** argv) {
 
         // end of text token
         if (embd.back() == 2) {
-            //fprintf(stderr, " [end of text]\n");
+            fprintf(stderr, " [end of text]\n");
             is_interacting = true;
             return 0;
         }
