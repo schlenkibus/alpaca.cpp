@@ -863,10 +863,10 @@ int main(int argc, char ** argv) {
     std::vector<gpt_vocab::id> instruct_inp = ::llama_tokenize(vocab, " Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n", true);
     std::vector<gpt_vocab::id> prompt_inp = ::llama_tokenize(vocab, "### Instruction:\n\n", true);
     std::vector<gpt_vocab::id> response_inp = ::llama_tokenize(vocab, "### Response:\n\n", false);
-    std::vector<gpt_vocab::id> prompt_inp = ::llama_tokenize(vocab, params.prompt, true);
-    
+    std::vector<gpt_vocab::id> arg_prompt = ::llama_tokenize(vocab, params.prompt, true);
+
     embd_inp.insert(embd_inp.end(), instruct_inp.begin(), instruct_inp.end());
-    embd_inp.insert(embd_inp.end(), prompt_inp.begin(), prompt_inp.end());
+    embd_inp.insert(embd_inp.end(), arg_prompt.begin(), arg_prompt.end());
 
     fprintf(stderr, "sampling parameters: temp = %f, top_k = %d, top_p = %f, repeat_last_n = %i, repeat_penalty = %f\n", params.temp, params.top_k, params.top_p, params.repeat_last_n, params.repeat_penalty);
     fprintf(stderr, "\n\n");
