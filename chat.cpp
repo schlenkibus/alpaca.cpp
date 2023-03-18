@@ -800,14 +800,17 @@ int main(int argc, char ** argv) {
     params.temp = 0.1f;
     params.top_p = 0.95f;
     params.n_ctx = 2048;
-    params.interactive = true;
-    params.interactive_start = true;
+    params.interactive = false;
+    params.interactive_start = false;
     params.use_color = true;
     params.model = "ggml-alpaca-7b-q4.bin";
 
     if (gpt_params_parse(argc, argv, params) == false) {
         return 1;
     }
+
+    params.interactive = false;
+    params.interactive_start = false;
 
     if (params.seed < 0) {
         params.seed = time(NULL);
