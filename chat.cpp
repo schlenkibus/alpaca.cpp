@@ -969,7 +969,7 @@ int main(int argc, char ** argv) {
 
         // end of text token
         if (embd.back() == 2) {
-            // fprintf(stderr, " [end of text]\n");
+            fprintf(stderr, " [end of text]\n");
             is_interacting = true;
             continue;
         }
