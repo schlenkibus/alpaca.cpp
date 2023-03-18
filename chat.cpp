@@ -866,7 +866,9 @@ int main(int argc, char ** argv) {
     std::vector<gpt_vocab::id> arg_prompt = ::llama_tokenize(vocab, params.prompt, true);
 
     embd_inp.insert(embd_inp.end(), instruct_inp.begin(), instruct_inp.end());
+    embd_inp.insert(embd_inp.end(), prompt_inp.begin(), prompt_inp.end());
     embd_inp.insert(embd_inp.end(), arg_prompt.begin(), arg_prompt.end());
+    embd_inp.insert(embd_inp.end(), response_inp.begin(), response_inp.end());
 
     fprintf(stderr, "sampling parameters: temp = %f, top_k = %d, top_p = %f, repeat_last_n = %i, repeat_penalty = %f\n", params.temp, params.top_k, params.top_p, params.repeat_last_n, params.repeat_penalty);
     fprintf(stderr, "\n\n");
@@ -939,11 +941,11 @@ int main(int argc, char ** argv) {
 
             // decrement remaining sampling budget
             --remaining_tokens;
-            fprintf(stderr, "remaining tokens: %i\n", remaining_tokens);
+            // fprintf(stderr, "remaining tokens: %i\n", remaining_tokens);
         } else {
             // some user input remains from prompt or interaction, forward it to processing
             while (embd_inp.size() > input_consumed) {
-                fprintf(stderr, "%6d -> '%s'\n", embd_inp[input_consumed], vocab.id_to_token.at(embd_inp[input_consumed]).c_str());
+                // fprintf(stderr, "%6d -> '%s'\n", embd_inp[input_consumed], vocab.id_to_token.at(embd_inp[input_consumed]).c_str());
 
                 embd.push_back(embd_inp[input_consumed]);
                 last_n_tokens.erase(last_n_tokens.begin());
