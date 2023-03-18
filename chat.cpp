@@ -802,7 +802,7 @@ int main(int argc, char ** argv) {
     params.n_ctx = 2048;
     params.interactive = false;
     params.interactive_start = false;
-    params.use_color = true;
+    params.use_color = false;
     params.model = "ggml-alpaca-7b-q4.bin";
 
     if (gpt_params_parse(argc, argv, params) == false) {
@@ -859,32 +859,14 @@ int main(int argc, char ** argv) {
     // Add a space in front of the first character to match OG llama tokenizer behavior
     // params.prompt.insert(0, 1, ' ');
     // tokenize the prompt
-    std::vector<gpt_vocab::id> embd_inp = ::llama_tokenize(vocab, params.prompt, true);
+    std::vector<gpt_vocab::id> embd_inp;
     std::vector<gpt_vocab::id> instruct_inp = ::llama_tokenize(vocab, " Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n", true);
     std::vector<gpt_vocab::id> prompt_inp = ::llama_tokenize(vocab, "### Instruction:\n\n", true);
     std::vector<gpt_vocab::id> response_inp = ::llama_tokenize(vocab, "### Response:\n\n", false);
-
+    auto prompt_inp = ::llama_tokenize(vocab, params.prompt, true);
     embd_inp.insert(embd_inp.end(), instruct_inp.begin(), instruct_inp.end());
+    embd_inp.insert(embd_inp.end(), prompt_inp.begin(), prompt_inp.end());
 
-
-    if (params.interactive) {
-#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
-        struct sigaction sigint_action;
-        sigint_action.sa_handler = sigint_handler;
-        sigemptyset (&sigint_action.sa_mask);
-        sigint_action.sa_flags = 0;
-        sigaction(SIGINT, &sigint_action, NULL);
-#elif defined (_WIN32)
-        signal(SIGINT, sigint_handler);
-		//Windows console ANSI color fix 
-		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-		DWORD mode;
-		GetConsoleMode(hConsole, &mode);
-		SetConsoleMode(hConsole, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-#endif
-
-        fprintf(stderr, "%s: interactive mode on.\n", __func__);
-    }
     fprintf(stderr, "sampling parameters: temp = %f, top_k = %d, top_p = %f, repeat_last_n = %i, repeat_penalty = %f\n", params.temp, params.top_k, params.top_p, params.repeat_last_n, params.repeat_penalty);
     fprintf(stderr, "\n\n");
 
@@ -898,32 +880,17 @@ int main(int argc, char ** argv) {
     std::vector<gpt_vocab::id> last_n_tokens(last_n_size);
     std::fill(last_n_tokens.begin(), last_n_tokens.end(), 0);
 
-
-    if (params.interactive) {
-        fprintf(stderr, "== Running in chat mode. ==\n"
-#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__)) || defined (_WIN32)
-               " - Press Ctrl+C to interject at any time.\n"
-#endif
-               " - Press Return to return control to LLaMA.\n"
-               " - If you want to submit another line, end your input in '\\'.\n");
-    }
-
     // we may want to slide the input window along with the context, but for now we restrict to the context length
     int remaining_tokens = model.hparams.n_ctx - embd_inp.size();
     int input_consumed = 0;
     bool input_noecho = true;
 
     // prompt user immediately after the starting prompt has been loaded
-    if (params.interactive_start) {
-        is_interacting = true;
-    }
 
     // set the color for the prompt which will be output initially
     if (params.use_color) {
         printf(ANSI_COLOR_YELLOW);
     }
-
-    
 
     while (remaining_tokens > 0) {
         // predict
@@ -992,65 +959,11 @@ int main(int argc, char ** argv) {
         }
 
         // display text
-        // if (!input_noecho) {
+        if (!input_noecho) {
             for (auto id : embd) {
                 printf("%s", vocab.id_to_token[id].c_str());
             }
             fflush(stdout);
-        // }
-
-        // in interactive mode, and not currently processing queued inputs;
-        // check if we should prompt the user for more
-        if (params.interactive && embd_inp.size() <= input_consumed) {
-            // check for reverse prompt
-            // if (antiprompt_inp.size() && std::equal(antiprompt_inp.rbegin(), antiprompt_inp.rend(), last_n_tokens.rbegin())) {
-            //     // reverse prompt found
-            //     is_interacting = true;
-            // }
-            if (is_interacting) {
-                // input_consumed =  0;
-                // embd_inp.erase(embd_inp.begin());
-                input_consumed = embd_inp.size();
-                embd_inp.insert(embd_inp.end(), prompt_inp.begin(), prompt_inp.end());
-                
-
-                printf("\n> ");
-
-                // currently being interactive
-                bool another_line=true;
-                while (another_line) {
-                    fflush(stdout);
-                    char buf[256] = {0};
-                    int n_read;
-                    if(params.use_color) printf(ANSI_BOLD ANSI_COLOR_GREEN);
-                    if (scanf("%255[^\n]%n%*c", buf, &n_read) <= 0) {
-                        // presumable empty line, consume the newline
-                        if (scanf("%*c") <= 0) { /*ignore*/ }
-                        n_read=0;
-                    }
-                    if(params.use_color) printf(ANSI_COLOR_RESET);
-
-                    if (n_read > 0 && buf[n_read-1]=='\\') {
-                        another_line = true;
-                        buf[n_read-1] = '\n';
-                        buf[n_read] = 0;
-                    } else {
-                        another_line = false;
-                        buf[n_read] = '\n';
-                        buf[n_read+1] = 0;
-                    }
-
-                    std::vector<gpt_vocab::id> line_inp = ::llama_tokenize(vocab, buf, false);
-                    embd_inp.insert(embd_inp.end(), line_inp.begin(), line_inp.end());
-                    embd_inp.insert(embd_inp.end(), response_inp.begin(), response_inp.end());
-
-                    remaining_tokens -= prompt_inp.size() + line_inp.size() + response_inp.size();
-
-                    input_noecho = true; // do not echo this again
-                }
-
-                is_interacting = false;
-            }
         }
 
         // end of text token
