@@ -863,7 +863,8 @@ int main(int argc, char ** argv) {
     std::vector<gpt_vocab::id> instruct_inp = ::llama_tokenize(vocab, " Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n", true);
     std::vector<gpt_vocab::id> prompt_inp = ::llama_tokenize(vocab, "### Instruction:\n\n", true);
     std::vector<gpt_vocab::id> response_inp = ::llama_tokenize(vocab, "### Response:\n\n", false);
-    auto prompt_inp = ::llama_tokenize(vocab, params.prompt, true);
+    std::vector<gpt_vocab::id> prompt_inp = ::llama_tokenize(vocab, params.prompt, true);
+    
     embd_inp.insert(embd_inp.end(), instruct_inp.begin(), instruct_inp.end());
     embd_inp.insert(embd_inp.end(), prompt_inp.begin(), prompt_inp.end());
 
