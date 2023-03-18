@@ -963,8 +963,8 @@ int main(int argc, char ** argv) {
         if (!input_noecho) {
             for (auto id : embd) {
                 printf("%s", vocab.id_to_token[id].c_str());
+                fflush(stdout);
             }
-            fflush(stdout);
         }
 
         // end of text token
