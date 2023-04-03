@@ -132,7 +132,7 @@ $(info I CC:       $(CCV))
 $(info I CXX:      $(CXXV))
 $(info )
 
-default: main quantize perplexity embedding
+default: main quantize perplexity embedding tokenize
 
 #
 # Build library
@@ -164,6 +164,9 @@ perplexity: examples/perplexity/perplexity.cpp ggml.o llama.o common.o
 
 embedding: examples/embedding/embedding.cpp ggml.o llama.o common.o
 	$(CXX) $(CXXFLAGS) examples/embedding/embedding.cpp ggml.o llama.o common.o -o embedding $(LDFLAGS)
+
+tokenize: examples/tokenize/tokenize.cpp ggml.o llama.o common.o
+	$(CXX) $(CXXFLAGS) examples/tokenize/tokenize.cpp ggml.o llama.o common.o -o tokenize $(LDFLAGS)
 
 #
 # Tests
